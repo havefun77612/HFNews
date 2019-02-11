@@ -4,5 +4,5 @@
     <item
         android:id="@+id/Now"
         android:icon="@android:drawable/ic_popup_sync"
-        android:title="UpdateNow" />
+        android:title="LoadMore" />
 </menu>

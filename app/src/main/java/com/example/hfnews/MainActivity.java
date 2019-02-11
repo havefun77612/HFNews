@@ -35,7 +35,8 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> titels;
     ArrayList<String> content;
     SQLiteDatabase articlsDB;
-
+    int numberoftopic=0;
+    int numberofnewtopic=0;
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -48,7 +49,11 @@ public class MainActivity extends AppCompatActivity {
 
         switch (item.getItemId()) {
             case R.id.Now:
-             //   updatenow();
+             updatenow();
+             /*
+             ** intend to add The Feature Of Pulling Up New Content :) 
+              */
+
 
             default:
             return super.onOptionsItemSelected(item);
@@ -71,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
 
         articlsDB = this.openOrCreateDatabase("Articlestb", MODE_PRIVATE, null);
         articlsDB.execSQL("create table if not exists articl (id integer primary key ,articalid integer ,title varchar ,content varchar )");
+        articlsDB.execSQL("create table if not exists numofart (oldnum integer)");
         updatelistview();
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -82,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
+        checkiffirst();
         try {
 
           //  downloadtask task = new downloadtask();
@@ -93,8 +99,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-    }
 
+
+
+    }
+/*
+** the method is to update the value of the listview Through the SQLight Database Or By Downloading From the Internet
+ */
 
     public void updatelistview() {
 
@@ -116,7 +127,9 @@ public class MainActivity extends AppCompatActivity {
             arrayAdapter.notifyDataSetChanged();
         }
     }
-
+/*
+* to update the List Momently Not Officially Work Good Yet :(
+ ***/
 
     void updatenow(){
         Cursor C = articlsDB.rawQuery("select * from articl", null);
@@ -125,16 +138,37 @@ public class MainActivity extends AppCompatActivity {
         int titleindx = C.getColumnIndex("title");
 
 
-            do {
-                titels.add(C.getString(titleindx));
-                content.add(C.getString(contentindx));
-            } while (C.moveToNext());
+
+        while (C.moveToNext()){
+            titels.add(C.getString(titleindx));
+            content.add(C.getString(contentindx));
+
+        }
 
             arrayAdapter.notifyDataSetChanged();
         }
 
+        /*
+        ** to check if this is the first run of the Code
+         */
+        void checkiffirst(){
+            Cursor c=articlsDB.rawQuery("select * from numofart ",null);
+            if (!c.moveToNext()){
+                articlsDB.execSQL("insert into numofart (oldnum) values (5)");
+            }else {
+                int number1=c.getColumnIndex("oldnum");
+                c.moveToNext();
+                numberoftopic= Integer.parseInt(c.getString(number1));
+            }
+
+        }
 
 
+
+
+/*
+** DownloadTask is Extending AsyncTask  to Do Something inThe Background
+ */
     public class downloadtask extends AsyncTask<String, Void, String> {
 
         InputStream in;
@@ -171,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 JSONArray jsonArray = new JSONArray(result);
 
-                int numberoftopic = 25;
+
                 //for removing the last results
                 articlsDB.execSQL("delete from articl");
                 if (numberoftopic > jsonArray.length()) {
